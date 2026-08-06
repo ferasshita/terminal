@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum RateType {
+  BUY
+  SELL
+}
+
+enum SourceType {
+  EXCHANGE_OFFICE
+  NEWS_AGENCY
+  CENTRAL_BANK
+  OTHER
+}
+
+enum Importance {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id           String   @id @default(cuid())
+  fullName     String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Currency {
+  id         String           @id @default(cuid())
+  code       String           @unique
+  name       String
+  symbol     String
+  country    String
+  flag       String
+  isActive   Boolean          @default(true)
+  rates      ExchangeRate[]
+  historical HistoricalRate[]
+  news       News[]
+  events     EconomicEvent[]
+}
+
+model Source {
+  id              String           @id @default(cuid())
+  name            String
+  website         String
+  type            SourceType
+  exchangeRates   ExchangeRate[]
+  historicalRates HistoricalRate[]
+  news            News[]
+}
+
+model ExchangeRate {
+  id           String    @id @default(cuid())
+  currencyCode String
+  rate         Decimal   @db.Decimal(12, 4)
+  type         RateType
+  sourceId     String
+  createdAt    DateTime  @default(now())
+
+  currency Currency @relation(fields: [currencyCode], references: [code])
+  source   Source   @relation(fields: [sourceId], references: [id])
+
+  @@index([currencyCode, createdAt])
+}
+
+model HistoricalRate {
+  id           String    @id @default(cuid())
+  currencyCode String
+  buyRate      Decimal   @db.Decimal(12, 4)
+  sellRate     Decimal   @db.Decimal(12, 4)
+  sourceId     String
+  recordedAt   DateTime  @default(now())
+
+  currency Currency @relation(fields: [currencyCode], references: [code])
+  source   Source   @relation(fields: [sourceId], references: [id])
+
+  @@index([currencyCode, recordedAt])
+}
+
+model News {
+  id           String     @id @default(cuid())
+  title        String
+  content      String
+  category     String
+  countryCode  String
+  currencyCode String
+  importance   Importance
+  sourceId     String
+  publishedAt  DateTime   @default(now())
+
+  currency Currency @relation(fields: [currencyCode], references: [code])
+  source   Source   @relation(fields: [sourceId], references: [id])
+
+  @@index([currencyCode, publishedAt])
+}
+
+model EconomicEvent {
+  id           String     @id @default(cuid())
+  title        String
+  country      String
+  currencyCode String
+  forecast     String
+  previous     String
+  actual       String?
+  importance   Importance
+  eventDate    DateTime
+
+  currency Currency @relation(fields: [currencyCode], references: [code])
+
+  @@index([currencyCode, eventDate])
+}
+
+model ExchangeOffice {
+  id        String  @id @default(cuid())
+  name      String
+  city      String
+  address   String
+  phone     String
+  latitude  Float
+  longitude Float
+  verified  Boolean @default(false)
+}
