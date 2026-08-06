@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: #04070d;
+  color: #d7deea;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.ag-theme-quartz-dark {
+  --ag-background-color: #0c111a;
+  --ag-odd-row-background-color: #0f1520;
+  --ag-header-background-color: #131b28;
+  --ag-border-color: #1f2b3e;
+  --ag-foreground-color: #e2e8f0;
+  --ag-font-size: 12px;
+}
