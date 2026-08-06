@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { type SignOptions } from 'jsonwebtoken';
 import { Role } from '@prisma/client';
 import { z } from 'zod';
 
@@ -26,8 +26,8 @@ const loginSchema = z.object({
 const signToken = (userId: string, role: Role, rememberMe: boolean) =>
   jwt.sign({ role }, env.JWT_SECRET, {
     subject: userId,
-    expiresIn: rememberMe ? env.JWT_REMEMBER_EXPIRES_IN : env.JWT_EXPIRES_IN,
-  });
+    expiresIn: (rememberMe ? env.JWT_REMEMBER_EXPIRES_IN : env.JWT_EXPIRES_IN) as SignOptions['expiresIn'],
+  } satisfies SignOptions);
 
 router.post('/register', async (req, res, next) => {
   try {

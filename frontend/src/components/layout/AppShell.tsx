@@ -1,4 +1,4 @@
-import { Bell, Calendar, ChartCandlestick, LayoutDashboard, LogOut, Newspaper, Search, Settings, Shield, Store, Users } from 'lucide-react';
+import { Bell, Calendar, ChartCandlestick, LayoutDashboard, LogOut, Newspaper, Search, Settings, Shield, Store } from 'lucide-react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
