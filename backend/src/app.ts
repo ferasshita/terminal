@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
@@ -18,6 +19,19 @@ import sourcesRoutes from './routes/sources';
 import usersRoutes from './routes/users';
 
 const app = express();
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const protectedLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 app.use(helmet());
 app.use(cors({ origin: env.CORS_ORIGIN }));
@@ -28,7 +42,7 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.use('/auth', authRoutes);
+app.use('/auth', authLimiter, authRoutes);
 
 const adminWriteGuard = [auth, (req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (req.method === 'GET') {
@@ -38,15 +52,15 @@ const adminWriteGuard = [auth, (req: express.Request, res: express.Response, nex
   return authorize('ADMIN')(req, res, next);
 }];
 
-app.use('/currencies', ...adminWriteGuard, currenciesRoutes);
-app.use('/sources', ...adminWriteGuard, sourcesRoutes);
-app.use('/exchange-rates', ...adminWriteGuard, exchangeRatesRoutes);
-app.use('/historical-rates', auth, historicalRatesRoutes);
-app.use('/news', ...adminWriteGuard, newsRoutes);
-app.use('/economic-events', ...adminWriteGuard, economicEventsRoutes);
-app.use('/exchange-offices', ...adminWriteGuard, exchangeOfficesRoutes);
-app.use('/search', auth, searchRoutes);
-app.use('/users', auth, authorize('ADMIN'), usersRoutes);
+app.use('/currencies', protectedLimiter, ...adminWriteGuard, currenciesRoutes);
+app.use('/sources', protectedLimiter, ...adminWriteGuard, sourcesRoutes);
+app.use('/exchange-rates', protectedLimiter, ...adminWriteGuard, exchangeRatesRoutes);
+app.use('/historical-rates', protectedLimiter, auth, historicalRatesRoutes);
+app.use('/news', protectedLimiter, ...adminWriteGuard, newsRoutes);
+app.use('/economic-events', protectedLimiter, ...adminWriteGuard, economicEventsRoutes);
+app.use('/exchange-offices', protectedLimiter, ...adminWriteGuard, exchangeOfficesRoutes);
+app.use('/search', protectedLimiter, auth, searchRoutes);
+app.use('/users', protectedLimiter, auth, authorize('ADMIN'), usersRoutes);
 
 app.use(errorHandler);
 
